@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discord Webhook</title>
+<style>
+:root{--bg:#eef1f4;--pn:#fff;--ln:#d3dae1;--ink:#14202b;--mu:#5b6b79;--ac:#0f766e;--acw:#fff;--in:#f7f9fb;--er:#b42318}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1418;--pn:#161e24;--ln:#2a353e;--ink:#e5ecf1;--mu:#8fa0ad;--ac:#2dd4bf;--acw:#04211d;--in:#0f161b;--er:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 "BIZ UDPGothic","Hiragino Sans","Yu Gothic UI",Meiryo,system-ui,sans-serif}
+header{max-width:1280px;margin:auto;padding:28px 24px 4px}
+h1{margin:0;font-size:26px;letter-spacing:.02em}
+header p{margin:4px 0 0;color:var(--mu)}
+.wrap{max-width:1280px;margin:auto;padding:16px 24px 48px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:20px;align-items:start}
+.col{display:grid;gap:16px}
+.side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:12px}.side{position:static;max-height:none}}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:16px}
+h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:10px}
+input,textarea,select{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--ln);border-radius:6px;background:var(--in);color:var(--ink);font:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+.chk{display:inline-flex;align-items:center;gap:6px;margin:0 14px 8px 0;color:var(--ink);font-size:13px}
+.chk input{width:auto;margin:0}
+button{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--ln);border-radius:6px;background:var(--pn);color:var(--ink);font:inherit;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--ac)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.pri{background:var(--ac);color:var(--acw);border-color:var(--ac);font-weight:700}
+button.ghost{border-color:transparent;padding:4px 8px;color:var(--mu)}
+.ic{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.tb{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}.tb button{padding:3px 10px}
+.hint{color:var(--mu);font-size:12px;margin:6px 0}
+.cnt{float:right}.over{color:var(--er);font-weight:700}
+.embed{border:1px solid var(--ln);border-radius:8px;padding:12px;margin-bottom:12px;background:var(--in)}
+.embed input,.embed textarea{background:var(--pn)}
+.eh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.fhead{font-size:12px;color:var(--mu);margin:4px 0 6px}
+.fld{display:grid;gap:4px;padding:8px;border:1px dashed var(--ln);border-radius:6px;margin-bottom:8px}
+.fi{display:flex;align-items:center;gap:8px;padding:4px 0}.fi small{color:var(--mu)}.fi span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drag{outline:2px dashed var(--ac)}
+.errs div{display:flex;gap:6px;align-items:center;color:var(--er);margin-bottom:4px}
+#json{font:12px/1.5 ui-monospace,"SF Mono",Consolas,monospace;white-space:pre}
+.log div{display:flex;gap:8px;align-items:flex-start;font-size:12px;padding:3px 0;border-bottom:1px solid var(--ln)}
+.log time{color:var(--mu);flex:none}.log .ok .ic{color:#16a34a}.log .err .ic{color:var(--er)}
+.pv{background:#313338;color:#dbdee1;border-radius:8px;padding:16px;font:15px/1.4 "Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;min-height:100px;overflow:hidden;word-break:break-word}
+.msg{display:flex;gap:14px}
+.av{position:relative;width:40px;height:40px;border-radius:50%;background:#5865f2;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;overflow:hidden}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.un{font-weight:600;color:#f2f3f5}
+.bot{background:#5865f2;color:#fff;font-size:10px;padding:0 4px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.pv code{background:#1e1f22;padding:1px 4px;border-radius:3px;font-size:13px}
+.pv pre{background:#2b2d31;border:1px solid #1e1f22;padding:8px;border-radius:4px;white-space:pre-wrap;margin:4px 0}
+.pv blockquote{margin:2px 0;padding-left:10px;border-left:4px solid #4e5058}
+.pv a{color:#00a8fc}
+.sp{background:#1e1f22;color:transparent;border-radius:3px;cursor:pointer}.sp.on{background:#45474d;color:inherit}
+.pe{display:flex;gap:12px;margin-top:6px;max-width:520px;background:#2b2d31;border-left:4px solid #4e5058;border-radius:4px;padding:8px 12px 12px}
+.pm{flex:1;min-width:0}
+.pa{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-top:4px}.pa img{width:24px;height:24px;border-radius:50%}
+.pt{font-weight:700;margin-top:4px;color:#f2f3f5}.pd{font-size:14px;margin-top:4px}
+.pf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;font-size:14px}
+.pi{max-width:100%;border-radius:4px;margin-top:10px}.pth{width:64px;height:64px;object-fit:cover;border-radius:4px;margin-top:8px}
+.pfoot{display:flex;align-items:center;gap:6px;font-size:12px;color:#b5bac1;margin-top:8px}.pfoot img{width:20px;height:20px;border-radius:50%}
+.att{display:inline-block;background:#2b2d31;border:1px solid #1e1f22;border-radius:4px;padding:6px 10px;margin:6px 6px 0 0;font-size:13px}
+.att img{max-width:240px;max-height:200px;border-radius:4px;display:block;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Webhook送信ツール</h1>
+  <p>Discordのチャンネルへ、ブラウザから直接メッセージや埋め込み、ファイルを送れる。</p>
+</header>
+<div class="wrap">
+<div class="col">
+  <section class="card">
+    <h2 data-i="link">送信先</h2>
+    <label>Webhook URL<input id="url" type="password" autocomplete="off" spellcheck="false" placeholder="https://discord.com/api/webhooks/..."></label>
+    <div class="bar"><button id="showUrl" type="button">表示する</button><button id="getInfo" type="button" data-i="info">情報を取得</button></div>
+    <div id="info" class="hint"></div>
+    <div class="row"><label>保存名<input id="hname" placeholder="例: 通知用チャンネル"></label><label>保存済みの送信先<select id="hooks"></select></label></div>
+    <div class="bar"><button id="hsave" type="button" data-i="bookmark">この送信先を保存</button><button id="hdel" type="button" data-i="trash">選択を削除</button></div>
+    <p class="hint">URLを知っている人は誰でも送信できるので公開しないこと。保存先はこのブラウザの中だけ。</p>
+  </section>
+
+  <section class="card">
+    <h2 data-i="file-text">本文</h2>
+    <div class="row"><label>表示名 (80字まで)<input data-g="username" maxlength="80"></label><label>アイコン画像のURL<input data-g="avatar_url"></label></div>
+    <div class="tb">
+      <button type="button" data-a="**" data-z="**" aria-label="太字"><b>B</b></button>
+      <button type="button" data-a="*" data-z="*" aria-label="斜体"><i>I</i></button>
+      <button type="button" data-a="__" data-z="__" aria-label="下線"><u>U</u></button>
+      <button type="button" data-a="~~" data-z="~~" aria-label="取り消し線"><s>S</s></button>
+      <button type="button" data-a="`" data-z="`">コード</button>
+      <button type="button" data-a="```&#10;" data-z="&#10;```">コードブロック</button>
+      <button type="button" data-a="||" data-z="||">スポイラー</button>
+      <button type="button" data-a="> " data-z="">引用</button>
+    </div>
+    <label>本文<span id="cnt" class="cnt"></span><textarea id="content" data-g="content" rows="6"></textarea></label>
+    <label class="chk"><input type="checkbox" data-g="tts">読み上げ (TTS)</label>
+    <label class="chk"><input type="checkbox" data-g="suppress">リンク展開を隠す</label>
+    <label class="chk"><input type="checkbox" data-g="silent">通知を送らない</label>
+    <div class="row"><label>スレッド名 (フォーラム用に新規作成)<input data-g="thread_name"></label><label>スレッドID (既存スレッドへ送信)<input data-g="thread_id"></label></div>
+  </section>
+
+  <section class="card" id="drop">
+    <h2 data-i="paperclip">添付ファイル</h2>
+    <input id="files" type="file" multiple>
+    <div id="flist"></div>
+    <p class="hint">最大10個。このカードへドラッグ&amp;ドロップでも追加できる。</p>
+  </section>
+
+  <section class="card">
+    <h2 data-i="message-square">埋め込み</h2>
+    <div id="embeds"></div>
+    <div class="bar"><button id="addE" type="button" data-i="list-plus">埋め込みを追加</button><span class="hint">最大10個</span></div>
+  </section>
+
+  <section class="card">
+    <h2 data-i="clock">予約送信</h2>
+    <div class="bar"><input id="when" type="datetime-local" style="width:auto;margin:0"><button id="schedGo" type="button" data-i="clock">予約する</button><button id="schedX" type="button" data-i="x">取り消す</button></div>
+    <div id="schedInfo" class="hint">このタブを開いたままにする必要がある (最長で約24日先まで)。</div>
+  </section>
+
+  <section class="card">
+    <h2 data-i="save">テンプレート</h2>
+    <div class="row"><label>テンプレート名<input id="tname"></label><label>保存済み<select id="tpls"></select></label></div>
+    <div class="bar"><button id="tsave" type="button" data-i="save">現在の内容を保存</button><button id="tload" type="button" data-i="upload">読み込む</button><button id="tdel" type="button" data-i="trash">削除</button></div>
+  </section>
+</div>
+
+<div class="col side">
+  <section class="card"><h2 data-i="message-square">プレビュー</h2><div class="pv" id="pv"></div></section>
+  <section class="card">
+    <div id="errs" class="errs"></div>
+    <div class="bar">
+      <button class="pri" id="send" type="button" data-i="send">送信</button>
+      <button id="edit" type="button" data-i="file-text" disabled>直前の投稿を編集</button>
+      <button id="del" type="button" data-i="trash" disabled>直前の投稿を削除</button>
+      <button id="reset" type="button" data-i="rotate-ccw">全てクリア</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2 data-i="code-xml">JSON</h2>
+    <textarea id="json" rows="10" spellcheck="false"></textarea>
+    <div class="bar" style="margin-top:8px">
+      <button id="jcopy" type="button" data-i="copy">コピー</button>
+      <button id="jload" type="button" data-i="upload">JSONを反映</button>
+      <button id="jdl" type="button" data-i="download">ファイルに保存</button>
+      <button id="curl" type="button" data-i="code-xml">cURLをコピー</button>
+    </div>
+  </section>
+  <section class="card"><h2 data-i="info">ログ</h2><div id="log" class="log"></div></section>
+</div>
+</div>
+
+<script>
+/* アイコン: Lucide (ISC License) https://lucide.dev */
+const IC={
+send:'<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+paperclip:'<path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"/>',
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+trash:'<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+save:'<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>',
+upload:'<path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+download:'<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+'code-xml':'<path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/>',
+clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+bookmark:'<path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"/>',
+'rotate-ccw':'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+'list-plus':'<path d="M16 5H3"/><path d="M11 12H3"/><path d="M16 19H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>',
+'file-text':'<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+'message-square':'<path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>'
+};
+const ic=n=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+document.querySelectorAll('[data-i]').forEach(e=>e.insertAdjacentHTML('afterbegin',ic(e.dataset.i)));
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const E0=()=>({title:'',url:'',description:'',color:'#2dd4bf',useColor:true,an:'',au:'',ai:'',thumb:'',image:'',ft:'',fi:'',ts:false,fields:[]});
+const S={content:'',username:'',avatar_url:'',tts:false,suppress:false,silent:false,thread_name:'',thread_id:'',embeds:[],files:[]};
+let last='',whName='',whAv='',busy=false,tm=null;
+const hex=n=>'#'+n.toString(16).padStart(6,'0');
+
+/* ---- ログ ---- */
+const L=[];
+function log(t,m){L.unshift([t,new Date().toLocaleTimeString(),m]);L.length=Math.min(L.length,40);
+  $('log').innerHTML=L.map(([t,tm,m])=>`<div class="${t}">${ic(t==='ok'?'check':t==='err'?'x':'info')}<time>${tm}</time><span>${esc(m)}</span></div>`).join('')}
+
+/* ---- ペイロード ---- */
+function embedObj(m){const o={};
+  if(m.title)o.title=m.title; if(m.description)o.description=m.description; if(m.url)o.url=m.url;
+  if(m.useColor)o.color=parseInt(m.color.slice(1),16);
+  if(m.an)o.author={name:m.an,...(m.au&&{url:m.au}),...(m.ai&&{icon_url:m.ai})};
+  if(m.thumb)o.thumbnail={url:m.thumb}; if(m.image)o.image={url:m.image};
+  if(m.ft)o.footer={text:m.ft,...(m.fi&&{icon_url:m.fi})};
+  if(m.ts)o.timestamp=new Date().toISOString();
+  const f=m.fields.filter(f=>f.name||f.value).map(f=>({name:f.name||'\u200b',value:f.value||'\u200b',inline:!!f.inline}));
+  if(f.length)o.fields=f; return o}
+function payload(){const p={};
+  if(S.content)p.content=S.content; if(S.username)p.username=S.username; if(S.avatar_url)p.avatar_url=S.avatar_url;
+  if(S.tts)p.tts=true; if(S.thread_name)p.thread_name=S.thread_name;
+  const fl=(S.suppress?4:0)|(S.silent?4096:0); if(fl)p.flags=fl;
+  const em=S.embeds.map(embedObj).filter(o=>Object.keys(o).some(k=>k!=='color')); if(em.length)p.embeds=em; return p}
+function fromPayload(p){
+  Object.assign(S,{content:p.content||'',username:p.username||'',avatar_url:p.avatar_url||'',tts:!!p.tts,thread_name:p.thread_name||'',suppress:!!(p.flags&4),silent:!!(p.flags&4096)});
+  S.embeds=(p.embeds||[]).map(o=>({...E0(),title:o.title||'',url:o.url||'',description:o.description||'',useColor:o.color!=null,color:o.color!=null?hex(o.color):'#2dd4bf',an:o.author?.name||'',au:o.author?.url||'',ai:o.author?.icon_url||'',thumb:o.thumbnail?.url||'',image:o.image?.url||'',ft:o.footer?.text||'',fi:o.footer?.icon_url||'',ts:!!o.timestamp,fields:(o.fields||[]).map(f=>({name:f.name||'',value:f.value||'',inline:!!f.inline}))}))}
+const base=()=>$('url').value.trim().split('?')[0].replace(/\/$/,'');
+function check(p){const er=[],u=base();
+  if(!/^https:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/api(?:\/v\d+)?\/webhooks\/\d+\/[\w-]+$/.test(u))er.push(u?'Webhook URLの形式が違う':'Webhook URLを入力してね');
+  if(!p.content&&!p.embeds&&!S.files.length)er.push('本文・埋め込み・添付のどれかが必要');
+  if(S.content.length>2000)er.push('本文が2000字を超えている');
+  let tot=0;
+  (p.embeds||[]).forEach((o,i)=>{const n='埋め込み'+(i+1);
+    [[o.title,256,'タイトル'],[o.description,4096,'説明'],[o.author?.name,256,'作者名'],[o.footer?.text,2048,'フッター']].forEach(([s,m,l])=>{if((s||'').length>m)er.push(`${n}の${l}が${m}字を超えている`)});
+    (o.fields||[]).forEach(f=>{if(f.name.length>256||f.value.length>1024)er.push(`${n}のフィールドが長すぎる (名前256字・値1024字まで)`)});
+    tot+=[o.title,o.description,o.author?.name,o.footer?.text,...(o.fields||[]).flatMap(f=>[f.name,f.value])].reduce((a,s)=>a+(s||'').length,0)});
+  if(tot>6000)er.push('埋め込み全体の文字数が6000字を超えている');
+  return er}
+
+/* ---- プレビュー ---- */
+function md(s){s=esc(s);const code=[];
+  s=s.replace(/```(?:\w+\n)?([\s\S]*?)```/g,(_,c)=>{code.push(c);return '\x00'+(code.length-1)+'\x00'});
+  s=s.replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([\s\S]+?)\*\*/g,'<b>$1</b>').replace(/__([\s\S]+?)__/g,'<u>$1</u>')
+   .replace(/\*([^*\n]+)\*/g,'<i>$1</i>').replace(/~~([\s\S]+?)~~/g,'<s>$1</s>').replace(/\|\|([\s\S]+?)\|\|/g,'<span class="sp">$1</span>')
+   .replace(/^&gt; (.*)$/gm,'<blockquote>$1</blockquote>').replace(/(https?:\/\/[^\s<]+)/g,'<a>$1</a>').replace(/\n/g,'<br>');
+  return s.replace(/\x00(\d+)\x00/g,(_,i)=>'<pre>'+code[i]+'</pre>')}
+const im=(u,c='')=>`<img ${c?`class="${c}" `:''}src="${esc(u)}" alt="" onerror="this.remove()">`;
+const ev=o=>`<div class="pe" style="border-left-color:${o.color!=null?hex(o.color):'#4e5058'}"><div class="pm">
+${o.author?`<div class="pa">${o.author.icon_url?im(o.author.icon_url):''}${esc(o.author.name)}</div>`:''}
+${o.title?`<div class="pt">${o.url?'<a>':''}${esc(o.title)}${o.url?'</a>':''}</div>`:''}
+${o.description?`<div class="pd">${md(o.description)}</div>`:''}
+${o.fields?`<div class="pf">${o.fields.map(f=>`<div style="${f.inline?'':'grid-column:1/-1'}"><b>${md(f.name)}</b><div>${md(f.value)}</div></div>`).join('')}</div>`:''}
+${o.image?im(o.image.url,'pi'):''}
+${o.footer||o.timestamp?`<div class="pfoot">${o.footer?.icon_url?im(o.footer.icon_url):''}<span>${esc(o.footer?.text||'')}${o.footer&&o.timestamp?' | ':''}${o.timestamp?new Date(o.timestamp).toLocaleString():''}</span></div>`:''}
+</div>${o.thumbnail?im(o.thumbnail.url,'pth'):''}</div>`;
+function preview(p){
+  if(!p.content&&!p.embeds&&!S.files.length){$('pv').innerHTML='<span style="color:#949ba4">入力するとここに表示される</span>';return}
+  const nm=S.username||whName||'Webhook',av=S.avatar_url||whAv;
+  $('pv').innerHTML=`<div class="msg"><div class="av">${esc(nm[0]||'W')}${av?im(av):''}</div><div style="min-width:0;flex:1">
+<div><span class="un">${esc(nm)}</span><span class="bot">APP</span><small style="color:#949ba4;margin-left:8px">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</small></div>
+${p.content?`<div>${md(p.content)}</div>`:''}${(p.embeds||[]).map(ev).join('')}
+${S.files.map(f=>`<div class="att">${esc(f.file.name)}${f.file.type.startsWith('image/')?`<img src="${f.u}" alt="">`:''}</div>`).join('')}</div></div>`}
+
+function refresh(){const p=payload();preview(p);
+  if(document.activeElement!==$('json'))$('json').value=JSON.stringify(p,null,2);
+  $('cnt').textContent=S.content.length+' / 2000';$('cnt').classList.toggle('over',S.content.length>2000);
+  const er=check(p);$('errs').innerHTML=er.map(e=>`<div>${ic('x')}${esc(e)}</div>`).join('');
+  $('send').disabled=busy||!!er.length;$('edit').disabled=$('del').disabled=!last||busy}
+
+/* ---- 埋め込みフォーム ---- */
+const fi=(i,k,l)=>`<label>${l}<input data-e="${i}" data-k="${k}" value="${esc(S.embeds[i][k])}"></label>`;
+function renderEmbeds(){
+  $('embeds').innerHTML=S.embeds.map((m,i)=>`<div class="embed">
+<div class="eh"><b>埋め込み ${i+1}</b><span><button class="ghost" type="button" data-act="dup" data-e="${i}">${ic('copy')}複製</button><button class="ghost" type="button" data-act="del" data-e="${i}">${ic('trash')}削除</button></span></div>
+${fi(i,'title','タイトル (256字まで)')}${fi(i,'url','タイトルのリンクURL')}
+<label>説明 (4096字まで)<textarea data-e="${i}" data-k="description" rows="3">${esc(m.description)}</textarea></label>
+<div class="bar"><label class="chk"><input type="checkbox" data-e="${i}" data-k="useColor" ${m.useColor?'checked':''}>左の帯に色をつける</label><input type="color" aria-label="帯の色" data-e="${i}" data-k="color" value="${m.color}" style="width:56px;height:32px;padding:2px;margin:0 14px 8px 0"><label class="chk"><input type="checkbox" data-e="${i}" data-k="ts" ${m.ts?'checked':''}>送信時刻を表示</label></div>
+<div class="row">${fi(i,'an','作者名')}${fi(i,'au','作者のリンクURL')}</div>${fi(i,'ai','作者のアイコンURL')}
+<div class="row">${fi(i,'thumb','サムネイルURL (右上の小さな画像)')}${fi(i,'image','画像URL (下に大きく表示)')}</div>
+<div class="row">${fi(i,'ft','フッターの文字')}${fi(i,'fi','フッターのアイコンURL')}</div>
+<div class="fhead">フィールド (${m.fields.length}/25)</div>
+${m.fields.map((f,j)=>`<div class="fld"><input data-e="${i}" data-f="${j}" data-k="name" value="${esc(f.name)}" placeholder="名前" aria-label="フィールド名"><textarea data-e="${i}" data-f="${j}" data-k="value" rows="2" placeholder="値" aria-label="フィールドの値">${esc(f.value)}</textarea><div class="bar" style="margin:0"><label class="chk" style="margin:0"><input type="checkbox" data-e="${i}" data-f="${j}" data-k="inline" ${f.inline?'checked':''}>横並び</label><button class="ghost" type="button" data-act="fdel" data-e="${i}" data-f="${j}">${ic('x')}削除</button></div></div>`).join('')}
+<button type="button" data-act="fadd" data-e="${i}">${ic('plus')}フィールドを追加</button></div>`).join('')||'<p class="hint">埋め込みはまだない。</p>'}
+function renderFiles(){
+  $('flist').innerHTML=S.files.map((f,i)=>`<div class="fi">${ic('file-text')}<span>${esc(f.file.name)}</span><small>${(f.file.size/1024).toFixed(1)} KB</small><button class="ghost" type="button" data-act="rmf" data-e="${i}" aria-label="添付を外す">${ic('x')}</button></div>`).join('')}
+function syncInputs(){document.querySelectorAll('[data-g]').forEach(el=>{const v=S[el.dataset.g];el.type==='checkbox'?el.checked=!!v:el.value=v||''})}
+function addFiles(list){for(const f of list){if(S.files.length>=10){log('err','添付は10個まで');break}S.files.push({file:f,u:URL.createObjectURL(f)})}renderFiles();refresh()}
+
+/* ---- イベント ---- */
+document.addEventListener('input',e=>{const t=e.target,v=t.type==='checkbox'?t.checked:t.value;
+  if(t.dataset.g){S[t.dataset.g]=v;refresh()}
+  else if(t.dataset.k!==undefined){const m=S.embeds[t.dataset.e];(t.dataset.f!==undefined?m.fields[t.dataset.f]:m)[t.dataset.k]=v;refresh()}});
+document.addEventListener('click',e=>{
+  const sp=e.target.closest('.sp');if(sp){sp.classList.toggle('on');return}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const i=+b.dataset.e,a=b.dataset.act;
+  if(a==='del')S.embeds.splice(i,1);
+  else if(a==='dup'){if(S.embeds.length<10)S.embeds.splice(i+1,0,structuredClone(S.embeds[i]))}
+  else if(a==='fadd'){if(S.embeds[i].fields.length<25)S.embeds[i].fields.push({name:'',value:'',inline:true})}
+  else if(a==='fdel')S.embeds[i].fields.splice(+b.dataset.f,1);
+  else if(a==='rmf'){URL.revokeObjectURL(S.files[i].u);S.files.splice(i,1);renderFiles();refresh();return}
+  renderEmbeds();refresh()});
+$('addE').onclick=()=>{if(S.embeds.length>=10){log('err','埋め込みは10個まで');return}S.embeds.push(E0());renderEmbeds();refresh()};
+document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const t=$('content'),s=t.selectionStart,e=t.selectionEnd;
+  t.setRangeText(b.dataset.a+t.value.slice(s,e)+b.dataset.z,s,e,'end');t.dispatchEvent(new Event('input',{bubbles:true}));t.focus()});
+$('url').oninput=refresh;
+$('showUrl').onclick=()=>{const t=$('url');t.type=t.type==='password'?'text':'password';$('showUrl').textContent=t.type==='password'?'表示する':'隠す'};
+$('files').onchange=e=>{addFiles(e.target.files);e.target.value=''};
+const dz=$('drop');dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};dz.ondragleave=()=>dz.classList.remove('drag');
+dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');addFiles(e.dataTransfer.files)};
+
+$('getInfo').onclick=async()=>{const u=base();
+  if(!/\/webhooks\/\d+\/[\w-]+$/.test(u)){log('err','URLを確認してね');return}
+  try{const r=await fetch(u),j=await r.json();if(!r.ok){log('err',j.message||r.status);return}
+    whName=j.name||'';whAv=j.avatar?`https://cdn.discordapp.com/avatars/${j.id}/${j.avatar}.png?size=64`:'';
+    $('info').textContent=`名前: ${j.name} / チャンネルID: ${j.channel_id} / サーバーID: ${j.guild_id||'不明'}`;
+    refresh();log('ok','Webhookの情報を取得した')}catch{log('err','情報を取得できなかった')}};
+
+/* ---- 送信 ---- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function send(edit){
+  const p=payload();if(check(p).length)return;
+  const q=S.thread_id?'&thread_id='+encodeURIComponent(S.thread_id):'';
+  const url=base()+(edit?'/messages/'+last:'')+'?wait=true'+q,opt={method:edit?'PATCH':'POST'};
+  if(edit){['username','avatar_url','tts','thread_name'].forEach(k=>delete p[k]);}
+  if(S.files.length&&!edit){const fd=new FormData();p.attachments=S.files.map((f,i)=>({id:i,filename:f.file.name}));
+    fd.append('payload_json',JSON.stringify(p));S.files.forEach((f,i)=>fd.append('files['+i+']',f.file,f.file.name));opt.body=fd}
+  else{opt.headers={'Content-Type':'application/json'};opt.body=JSON.stringify(p)}
+  busy=true;refresh();
+  try{let r=await fetch(url,opt);
+    if(r.status===429){const j=await r.json().catch(()=>({})),s=j.retry_after||1;log('info',`レート制限。${s}秒後に再試行する`);await sleep(s*1000+200);r=await fetch(url,opt)}
+    if(r.ok){const j=r.status===204?null:await r.json().catch(()=>null);if(j?.id&&!edit)last=j.id;log('ok',edit?'投稿を編集した':'送信した'+(j?.id?` (メッセージID: ${j.id})`:''))}
+    else{const j=await r.json().catch(()=>({}));log('err',`${r.status} ${j.message||r.statusText}`)}
+  }catch{log('err','通信に失敗した。URLとネットワークを確認してね')}
+  busy=false;refresh()}
+$('send').onclick=()=>send(false);
+$('edit').onclick=()=>send(true);
+$('del').onclick=async()=>{if(!last||!confirm('直前の投稿を削除する?'))return;
+  try{const r=await fetch(base()+'/messages/'+last+(S.thread_id?'?thread_id='+encodeURIComponent(S.thread_id):''),{method:'DELETE'});
+    if(r.ok){log('ok','直前の投稿を削除した');last=''}else log('err','削除に失敗した: '+r.status)}catch{log('err','通信に失敗した')}refresh()};
+$('reset').onclick=()=>{if(!confirm('入力内容を全てクリアする?'))return;
+  Object.assign(S,{content:'',username:'',avatar_url:'',tts:false,suppress:false,silent:false,thread_name:'',thread_id:'',embeds:[]});
+  S.files.forEach(f=>URL.revokeObjectURL(f.u));S.files=[];syncInputs();renderEmbeds();renderFiles();refresh()};
+
+/* ---- 予約 ---- */
+$('schedGo').onclick=()=>{const d=new Date($('when').value).getTime()-Date.now();
+  if(!(d>0)){log('err','未来の日時を指定してね');return}
+  if(d>2147483647){log('err','予約は約24日先まで');return}
+  if(check(payload()).length){log('err','入力内容のエラーを直してから予約してね');return}
+  clearTimeout(tm);tm=setTimeout(()=>{$('schedInfo').textContent='予約分を送信した。';send(false)},d);
+  $('schedInfo').textContent='予約中: '+new Date($('when').value).toLocaleString()+' に送信する (タブを閉じないでね)';log('ok','送信を予約した')};
+$('schedX').onclick=()=>{clearTimeout(tm);$('schedInfo').textContent='予約を取り消した。';};
+
+/* ---- JSON ---- */
+async function copy(t){try{await navigator.clipboard.writeText(t)}catch{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}log('ok','コピーした')}
+$('jcopy').onclick=()=>copy($('json').value);
+$('jload').onclick=()=>{try{fromPayload(JSON.parse($('json').value));syncInputs();renderEmbeds();refresh();log('ok','JSONを反映した')}catch(e){log('err','JSONを読み込めない: '+e.message)}};
+$('jdl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(payload(),null,2)],{type:'application/json'}));a.download='webhook-payload.json';a.click()};
+$('curl').onclick=()=>copy(`curl -X POST -H "Content-Type: application/json" -d '${JSON.stringify(payload()).replace(/'/g,"'\\''")}' "${base()}"`);
+
+/* ---- 保存 (送信先・テンプレート) ---- */
+function store(key,sel,nm,sv,dl,get,put,msg){
+  const render=()=>{$(sel).innerHTML='<option value="">選択してね</option>'+(ls.get(key)||[]).map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')};
+  $(sv).onclick=()=>{const v=get();if(v==null)return;const n=$(nm).value.trim()||'無題',h=(ls.get(key)||[]).filter(x=>x.n!==n);h.push({n,v});ls.set(key,h);render();log('ok',`${msg}を保存した: ${n}`)};
+  $(dl).onclick=()=>{const h=ls.get(key)||[],i=$(sel).value;if(i==='')return;h.splice(+i,1);ls.set(key,h);render()};
+  render();
+  return()=>{const x=(ls.get(key)||[])[$(sel).value];if(x){$(nm).value=x.n;put(x.v)}}}
+$('hooks').onchange=store('whh','hooks','hname','hsave','hdel',()=>$('url').value.trim()||(log('err','URLを入力してね'),null),v=>{$('url').value=v;refresh()},'送信先');
+const loadTpl=store('wht','tpls','tname','tsave','tdel',()=>{const{files,...r}=S;return JSON.parse(JSON.stringify(r))},v=>{Object.assign(S,structuredClone(v));syncInputs();renderEmbeds();refresh()},'テンプレート');
+$('tload').onclick=loadTpl;
+
+log('info','準備できた。Webhook URLを入力してね');
+renderEmbeds();renderFiles();refresh();
+</script>
+</body>
+</html>
